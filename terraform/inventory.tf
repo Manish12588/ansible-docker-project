@@ -10,10 +10,10 @@ resource "local_file" "ansible_inventory" {
     #ssh_key_path = "${path.module}/ansible-project-key"
     ssh_key_path = coalesce(
       var.controller_key_path,
-      "/home/${var.instances["control-node"].user}/keys/ansible-project-key"
+      "/home/${var.instances["control-node"].user}/keys/ansible-project-key.pem"
     )
   })
 
-  filename        = "${path.module}/inventories/dev/hosts.ini"
+  filename        = "${path.module}/../inventory.ini"
   file_permission = "0644"
 }

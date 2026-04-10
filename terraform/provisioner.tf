@@ -11,20 +11,20 @@ resource "null_resource" "setup_controller" {
     connection {
       type        = "ssh"
       user        = "ubuntu"
-      private_key = file("${path.module}/ansible-project-key")
+      private_key = file("${path.module}/ansible-project-key.pem")
       host        = aws_instance.my_instance["control-node"].public_ip
     }
   }
 
   #Copy Private key to controler node
   provisioner "file" {
-    source      = "${path.module}/ansible-project-key"
-    destination = "/home/ubuntu/keys/ansible-project-key"
+    source      = "${path.module}/ansible-project-key.pem"
+    destination = "/home/ubuntu/keys/ansible-project-key.pem"
 
     connection {
       type        = "ssh"
       user        = "ubuntu"
-      private_key = file("${path.module}/ansible-project-key")
+      private_key = file("${path.module}/ansible-project-key.pem")
       host        = aws_instance.my_instance["control-node"].public_ip
     }
   }
@@ -32,7 +32,7 @@ resource "null_resource" "setup_controller" {
   #Install ansible on controler node
   provisioner "remote-exec" {
     inline = [
-      "chmod 400 /home/ubuntu/keys/ansible-project-key",
+      "chmod 400 /home/ubuntu/keys/ansible-project-key.pem",
       "sudo apt-add-repository ppa:ansible/ansible -y",
       "sudo apt update -y ",
       "sudo apt install ansible -y",
@@ -42,7 +42,7 @@ resource "null_resource" "setup_controller" {
     connection {
       type        = "ssh"
       user        = "ubuntu"
-      private_key = file("${path.module}/ansible-project-key")
+      private_key = file("${path.module}/ansible-project-key.pem")
       host        = aws_instance.my_instance["control-node"].public_ip
     }
   }
