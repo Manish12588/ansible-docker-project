@@ -12,39 +12,24 @@
     update_cache: true
   tags: docker
 
-- name: Create directory for Docker key
-  file:
-    path: /etc/apt/keyrings
-    state: directory
-    mode: '0755'
-
 # ── Step 2: Add Docker GPG key ───────────────────────────────────────────────
 - name: Download Docker GPG key
-  shell: |
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
+  shell: >
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg |
     gpg --dearmor -o /etc/apt/keyrings/docker.gpg
   args:
-    creates: /etc/apt/keyrings/docker.gpg     # idempotent - skips if file exists
-  tags: docker
-
-- name: Set correct permissions on Docker GPG key
-  file:
-    path: /etc/apt/keyrings/docker.gpg
-    mode: '0644'
+    creates: /etc/apt/keyrings/docker.gpg
+  become: true
   tags: docker
 
 # ── Step 3: Add Docker CE repository ─────────────────────────────────────────
-
 - name: Add Docker CE repository
   apt_repository:
-    repo: "deb [arch={{ 'amd64' if ansible_architecture == 'x86_64' else 'arm64' }} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu {{ ansible_facts['distribution_release'] }} stable"
     state: present
     filename: docker-ce
-  tags: docker
-
-- name: Update apt cache after adding Docker repo   # <-- KEY CHANGE: explicit update
-  apt:
     update_cache: true
+  become: true
   tags: docker
 
 # ── Step 4: Install Docker CE ────────────────────────────────────────────────
@@ -54,6 +39,8 @@
       - docker-ce
       - docker-ce-cli
       - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
     state: present
     update_cache: true
   notify: Restart Docker      #Trigger an handler to run at the end of run.
@@ -67,6 +54,16 @@
     enabled: true
   tags: docker
 
+
+# ── Step : Create Deploy User ───────────────────────────────────
+- name: Create Deploy User
+  user:
+    name: deploy
+    shell: /bin/bash
+    create_home: true
+  tags: docker
+
+
 # ── Step 6: Add deploy user to docker group ───────────────────────────────────
 - name: Add deploy user to docker group
   user:
@@ -76,17 +73,11 @@
   tags: docker
 
 # ── Step 7: Install Docker Compose ────────────────────────────────────────────
-- name: Install pip3
+- name: Install Docker Compose plugin
   apt:
-    name: python3-pip
+    name:
+      - docker-compose-plugin
     state: present
-  tags: docker
-
-- name: Install Docker Compose via pip
-  pip:
-    name: docker-compose
-    state: present
-    executable: pip3
   tags: docker
 
 # ── Step 8: Log in to Docker Hub (vault-encrypted credentials) ────────────────
@@ -94,7 +85,7 @@
   community.docker.docker_login:
     username: "{{ vault_docker_username }}"
     password: "{{ vault_docker_password }}"
-  become_user: deploy
+      #become_user: deploy
   no_log: true
   when: vault_docker_username is defined
   tags: docker
@@ -107,6 +98,22 @@
     source: pull
   tags: docker
 
+# ── Step : Stop Old Container on same port ────────────────────────────────────────
+- name: Stop and remove old container on same port
+  community.docker.docker_container:
+    name: "{{ docker_app_name }}"
+    state: absent
+  tags: docker
+
+- name: Stop any container using the app port
+  shell: |
+    CONTAINER=$(docker ps -q --filter "publish={{ docker_app_port }}")
+    if [ -n "$CONTAINER" ]; then
+      docker stop $CONTAINER && docker rm $CONTAINER
+    fi
+  tags: docker
+
+
 # ── Step 10: Run application container ────────────────────────────────────────
 - name: Run application container
   community.docker.docker_container:
@@ -114,6 +121,7 @@
     image: "{{ docker_app_image }}:{{ docker_app_tag }}"
     state: started
     restart_policy: always
+    pull: always
     ports:
       - "{{ docker_app_port }}:{{ docker_container_port }}"
   tags: docker

@@ -14,16 +14,16 @@
   notify: Reload Nginx
   tags: nginx
 
-- name: Deploy the Nginx config from template
-  template:
-    src: nginx.conf.j2
-    dest: /etc/nginx/nginx.conf
-    owner: root
-    group: root
-    mode: '0644'
-    validate: nginx -t -c %s
-  notify: Reload Nginx
-  tags: nginx
+    #- name: Deploy the Nginx config from template
+    #template:
+    #src: nginx.conf.j2
+    #dest: /etc/nginx/nginx.conf
+    #owner: root
+    #group: root
+    #mode: '0644'
+      #    validate: nginx -t -c %s
+      #notify: Reload Nginx
+      # tags: nginx
 
 - name: Deploy the reverse proxy config from template
   template:

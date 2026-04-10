@@ -1,0 +1,5 @@
+nginx_upstream_port: 8080      # must match docker_app_port
+nginx_http_port: 80
+nginx_server_name: "your_domain_or_ip"
+project_name: "your_app_name"
+app_env: "production"
