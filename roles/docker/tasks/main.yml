@@ -54,8 +54,7 @@
     enabled: true
   tags: docker
 
-
-# ── Step : Create Deploy User ───────────────────────────────────
+# ── Step 6 : Create Deploy User ───────────────────────────────────
 - name: Create Deploy User
   user:
     name: deploy
@@ -64,7 +63,7 @@
   tags: docker
 
 
-# ── Step 6: Add deploy user to docker group ───────────────────────────────────
+# ── Step 7: Add deploy user to docker group ───────────────────────────────────
 - name: Add deploy user to docker group
   user:
     name: deploy
@@ -72,7 +71,7 @@
     append: true
   tags: docker
 
-# ── Step 7: Install Docker Compose ────────────────────────────────────────────
+# ── Step 8: Install Docker Compose ────────────────────────────────────────────
 - name: Install Docker Compose plugin
   apt:
     name:
@@ -80,17 +79,16 @@
     state: present
   tags: docker
 
-# ── Step 8: Log in to Docker Hub (vault-encrypted credentials) ────────────────
+# ── Step 9: Log in to Docker Hub (vault-encrypted credentials) ────────────────
 - name: Log in to Docker Hub
   community.docker.docker_login:
     username: "{{ vault_docker_username }}"
     password: "{{ vault_docker_password }}"
-      #become_user: deploy
   no_log: true
   when: vault_docker_username is defined
   tags: docker
 
-# ── Step 9: Pull application image ────────────────────────────────────────────
+# ── Step 10: Pull application image ────────────────────────────────────────────
 - name: Pull application image
   community.docker.docker_image:
     name: "{{ docker_app_image }}"
@@ -98,7 +96,7 @@
     source: pull
   tags: docker
 
-# ── Step : Stop Old Container on same port ────────────────────────────────────────
+# ── Step 11: Stop old Container on same port ────────────────────────────────────────
 - name: Stop and remove old container on same port
   community.docker.docker_container:
     name: "{{ docker_app_name }}"
@@ -113,8 +111,7 @@
     fi
   tags: docker
 
-
-# ── Step 10: Run application container ────────────────────────────────────────
+# ── Step 12: Run application container ────────────────────────────────────────
 - name: Run application container
   community.docker.docker_container:
     name: "{{ docker_app_name }}"
@@ -126,7 +123,7 @@
       - "{{ docker_app_port }}:{{ docker_container_port }}"
   tags: docker
 
-# ── Step 11: Verify container is healthy ──────────────────────────────────────
+# ── Step 13: Verify container is healthy ──────────────────────────────────────
 - name: Wait for container to be healthy
   uri:
     url: "http://localhost:{{ docker_app_port }}"
