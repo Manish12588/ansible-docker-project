@@ -1,19 +1,19 @@
 - name: Apply common configuration
-  hosts: all
+  hosts: servers
   become: true
   roles:
     - common
   tags: common
 
 - name: Install Docker and run containers
-  hosts: web
+  hosts: web-server
   become: true
   roles:
     - docker
   tags: docker
 
 - name: Configure Nginx reverse proxy
-  hosts: web
+  hosts: web-server
   become: true
   roles:
     - nginx
