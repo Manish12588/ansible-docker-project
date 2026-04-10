@@ -3,6 +3,12 @@ variable "aws_region" {
   default     = "ap-south-1"
 }
 
+variable "controller_key_path" {
+  description = "Path to SSH private key on the controller node"
+  default     = null              # will be computed dynamically
+  type = string
+}
+
 variable "instances" {
   description = "Map of instance name to AMI IDs, SSH User, and OS family."
 
@@ -23,19 +29,19 @@ variable "instances" {
     }
     "web-server" = {
       ami       = "ami-05d2d839d4f73aafb"       #Ubuntu Server 24.04 LTS region: ap-south-1 
-      user      = "Ubuntu"
+      user      = "ubuntu"
       os_family = "Debian"
       instance_type = "t3.micro"
     }
     "app-server" = {
       ami       = "ami-05d2d839d4f73aafb"       #Ubuntu Server 24.04 LTS region: ap-south-1 
-      user      = "Ubuntu"
+      user      = "ubuntu"
       os_family = "Debian"
       instance_type = "t3.micro"
     }
      "db-server" = {
       ami       = "ami-05d2d839d4f73aafb"       #Ubuntu Server 24.04 LTS region: ap-south-1 
-      user      = "Ubuntu"
+      user      = "ubuntu"
       os_family = "Debian"
       instance_type = "t3.micro"
     }
