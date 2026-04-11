@@ -6,14 +6,14 @@
   tags: common
 
 - name: Install Docker and run containers
-  hosts: web-server
+  hosts: webservers
   become: true
   roles:
     - docker
   tags: docker
 
 - name: Configure Nginx reverse proxy
-  hosts: web-server
+  hosts: webservers
   become: true
   roles:
     - nginx
